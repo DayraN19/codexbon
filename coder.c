@@ -6,7 +6,7 @@
 /*   By: bgranier <bgranier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/02 09:37:10 by bgranier          #+#    #+#             */
-/*   Updated: 2026/06/02 12:38:42 by bgranier         ###   ########.fr       */
+/*   Updated: 2026/06/03 10:01:57 by bgranier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,22 +22,30 @@ int	is_running(t_sim *sim)
 	return (val);
 }
 
+static int	should_stop(t_sim *sim, int idx)
+{
+	pthread_mutex_lock(&sim->log_mutex);
+	if (!is_running(sim)
+		|| sim->compile_count[idx] >= sim->nb_compiles_required)
+	{
+		pthread_mutex_unlock(&sim->log_mutex);
+		return (1);
+	}
+	pthread_mutex_unlock(&sim->log_mutex);
+	return (0);
+}
+
 void	*coder_routine(void *arg)
 {
 	t_coder	*c;
 	t_sim	*sim;
-	int		idx;
 
 	c = (t_coder *)arg;
 	sim = c->sim;
-	idx = c->id - 1;
 	ft_usleep((c->id - 1) * 2);
 	while (is_running(sim))
 	{
-		if (!coder_compile(c))
-			break ;
-		if (!is_running(sim)
-			|| sim->compile_count[idx] >= sim->nb_compiles_required)
+		if (!coder_compile(c) || should_stop(sim, c->id - 1))
 			break ;
 		ft_log(sim, c->id, "is debugging");
 		ft_usleep(sim->time_to_debug);

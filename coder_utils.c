@@ -6,7 +6,7 @@
 /*   By: bgranier <bgranier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/02 09:57:31 by bgranier          #+#    #+#             */
-/*   Updated: 2026/06/02 11:57:19 by bgranier         ###   ########.fr       */
+/*   Updated: 2026/06/03 09:57:28 by bgranier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,18 @@ int	one_coder_case(t_sim *sim, t_request *l)
 void	do_compile(t_coder *c)
 {
 	t_sim	*sim;
+	int		idx;
 
 	sim = c->sim;
-	sim->last_compile_start[c->id - 1] = get_time_ms();
+	idx = c->id - 1;
+	pthread_mutex_lock(&sim->log_mutex);
+	sim->last_compile_start[idx] = get_time_ms();
+	pthread_mutex_unlock(&sim->log_mutex);
 	ft_log(sim, c->id, "is compiling");
 	ft_usleep(sim->time_to_compile);
-	sim->compile_count[c->id - 1]++;
+	pthread_mutex_lock(&sim->log_mutex);
+	sim->compile_count[idx]++;
+	pthread_mutex_unlock(&sim->log_mutex);
 }
 
 int	take_dongles_normal(t_coder *c, t_request *l, t_request *r)
